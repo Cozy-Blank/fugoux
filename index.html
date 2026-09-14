@@ -157,10 +157,10 @@
       <div class="auto-gen-box">
         <h3>⚡ 月替わり・英数記号ランダム鍵一括生成</h3>
         <div class="key-input-group">
-          <input type="text" id="basePassInput" value="5561031" placeholder="ベース数字">
+          <input type="text" id="basePassInput" placeholder="ベース数字+今月">
           <button class="btn" style="width: auto; min-width: 110px; margin-top:0;" onclick="generateMonthlyKeys()">5つ一括生成</button>
         </div>
-        <p class="hint">※ベース数字＋今月で、英数記号を含む複雑な鍵1〜5を生成します。</p>
+        <p class="hint">※入力された「ベース数字＋今月」から、英数記号を含む複雑な鍵1〜5を生成します。</p>
       </div>
 
       <!-- 鍵スロット切替（編集・確認用） -->
@@ -225,7 +225,14 @@
 
     let keys = JSON.parse(localStorage.getItem('saved_keys')) || { 1: '', 2: '', 3: '', 4: '', 5: '' };
 
-    document.getElementById('keyInput').value = keys[currentEncryptSlot] || '';
+    // 🌟 初期化処理：今月を自動取得してデフォルトで「5561031 + 今月(2桁)」をセット！
+    window.addEventListener('DOMContentLoaded', () => {
+      const now = new Date();
+      const monthStr = String(now.getMonth() + 1).padStart(2, '0');
+      const defaultPass = `5561031${monthStr}`;
+      document.getElementById('basePassInput').value = defaultPass;
+      document.getElementById('keyInput').value = keys[currentEncryptSlot] || '';
+    });
 
     // 暗号化側のスロット選択
     function selectEncryptSlot(slot) {
@@ -268,22 +275,22 @@
       return result;
     }
 
+    // 🔥 入力欄に表示された数字（例: 556103109）をダイレクトに使って一括生成！
     function generateMonthlyKeys() {
-      const base = document.getElementById('basePassInput').value.trim();
-      if (!base) return alert('ベース数字を入力してください');
+      const rawInput = document.getElementById('basePassInput').value.trim();
+      if (!rawInput) return alert('数字を入力してください');
 
-      const now = new Date();
-      const monthStr = String(now.getMonth() + 1).padStart(2, '0');
       const lengths = [10, 14, 12, 16, 11];
 
       for (let i = 1; i <= 5; i++) {
-        const seedStr = `SALT_KEY_${base}_MONTH_${monthStr}_SLOT_${i}`;
+        // 入力欄の文字列（例: 556103109）をそのまま種にして生成
+        const seedStr = `SALT_KEY_${rawInput}_SLOT_${i}`;
         keys[i] = generateRandomKey(seedStr, lengths[i - 1]);
       }
 
       localStorage.setItem('saved_keys', JSON.stringify(keys));
       selectEncryptSlot(currentEncryptSlot);
-      alert(`ベース数字「${base}」と今月（${monthStr}月）から鍵1〜5を一括生成しました！`);
+      alert(`「${rawInput}」から鍵1〜5を一括生成しました！`);
     }
 
     // 暗号化処理
@@ -293,7 +300,6 @@
       if (!text) return alert('メッセージを入力してください');
       if (!key) return alert(`鍵 ${currentEncryptSlot} が設定されていません。「5つ一括生成」を押すか入力してください。`);
 
-      // 秘密記号 + 本文
       const targetText = CHECKSUM + text;
       
       let encrypted = '';
@@ -305,7 +311,7 @@
       document.getElementById('cipherResult').value = base64;
     }
 
-    // 🔓 解読処理（選ばれた「鍵番号」でのみ手動照合を行う！）
+    // 🔓 解読処理
     function decryptMessage() {
       const input = document.getElementById('cipherInput').value.trim();
       const key = keys[currentDecryptSlot];
@@ -320,7 +326,6 @@
           tempDecrypted += String.fromCharCode(decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length));
         }
 
-        // 秘密記号 CHECKSUM で始まっているか手動チェック
         if (tempDecrypted.startsWith(CHECKSUM)) {
           document.getElementById('decryptResult').value = tempDecrypted.substring(CHECKSUM.length);
           alert(`🎉 鍵 ${currentDecryptSlot} で正解！解読に成功しました！`);
