@@ -98,7 +98,7 @@
       outline: none; 
       -webkit-appearance: none;
     }
-    textarea { resize: vertical; min-height: 100px; line-height: 1.4; }
+    textarea { resize: vertical; min-height: 90px; line-height: 1.4; }
 
     .key-input-group { 
       display: flex; 
@@ -160,16 +160,17 @@
           <input type="text" id="basePassInput" value="5561031" placeholder="ベース数字">
           <button class="btn" style="width: auto; min-width: 110px; margin-top:0;" onclick="generateMonthlyKeys()">5つ一括生成</button>
         </div>
-        <p class="hint">※ベース数字＋今月から、英大文字・小文字・記号を含む複雑な鍵1〜5を完全ランダム生成します。</p>
+        <p class="hint">※ベース数字＋今月で、英数記号を含む複雑な鍵1〜5を生成します。</p>
       </div>
 
-      <!-- 鍵スロット切替 -->
+      <!-- 鍵スロット切替（編集・確認用） -->
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:6px;">鍵の確認・手動保存:</p>
       <div class="key-slots">
-        <button class="slot-btn active" onclick="selectSlot(1)">🔑 1</button>
-        <button class="slot-btn" onclick="selectSlot(2)">🔑 2</button>
-        <button class="slot-btn" onclick="selectSlot(3)">🔑 3</button>
-        <button class="slot-btn" onclick="selectSlot(4)">🔑 4</button>
-        <button class="slot-btn" onclick="selectSlot(5)">🔑 5</button>
+        <button class="slot-btn encrypt-slot active" onclick="selectEncryptSlot(1)">🔑 1</button>
+        <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(2)">🔑 2</button>
+        <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(3)">🔑 3</button>
+        <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(4)">🔑 4</button>
+        <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(5)">🔑 5</button>
       </div>
       <div class="key-input-group">
         <input type="password" id="keyInput" placeholder="選択中の鍵">
@@ -180,8 +181,16 @@
     <!-- 2. 暗号化エリア -->
     <div class="card">
       <h2>✉️ メッセージを暗号化する</h2>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:6px;">使用する鍵を選択してください:</p>
+      <div class="key-slots">
+        <button class="slot-btn encrypt-slot active" onclick="selectEncryptSlot(1)">🔑 1</button>
+        <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(2)">🔑 2</button>
+        <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(3)">🔑 3</button>
+        <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(4)">🔑 4</button>
+        <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(5)">🔑 5</button>
+      </div>
       <textarea id="plainText" placeholder="送りたいメッセージを入力..."></textarea>
-      <button class="btn" onclick="encryptMessage()">暗号を作成する</button>
+      <button class="btn" onclick="encryptMessage()">「鍵 <span id="selectedEncryptLabel">1</span>」で暗号を作成</button>
       
       <div style="margin-top: 12px;">
         <textarea id="cipherResult" readonly placeholder="作成された暗号が表示されます"></textarea>
@@ -189,46 +198,66 @@
       </div>
     </div>
 
-    <!-- 3. 解読エリア -->
+    <!-- 3. 解読エリア（手動で鍵を選んで照合！） -->
     <div class="card">
       <h2>🔓 暗号を解読（復号）する</h2>
+      <p style="font-size:0.8rem; color:var(--accent-color); margin-bottom:6px; font-weight:bold;">手動照合：どの鍵で解読を試しますか？</p>
+      <div class="key-slots">
+        <button class="slot-btn decrypt-slot active" onclick="selectDecryptSlot(1)">🔓 鍵 1</button>
+        <button class="slot-btn decrypt-slot" onclick="selectDecryptSlot(2)">🔓 鍵 2</button>
+        <button class="slot-btn decrypt-slot" onclick="selectDecryptSlot(3)">🔓 鍵 3</button>
+        <button class="slot-btn decrypt-slot" onclick="selectDecryptSlot(4)">🔓 鍵 4</button>
+        <button class="slot-btn decrypt-slot" onclick="selectDecryptSlot(5)">🔓 鍵 5</button>
+      </div>
       <textarea id="cipherInput" placeholder="受け取った暗号文を貼り付け..."></textarea>
-      <button class="btn" onclick="decryptMessage()">選択中の鍵で解読する</button>
+      <button class="btn" onclick="decryptMessage()">「鍵 <span id="selectedDecryptLabel">1</span>」で手動照合する</button>
       
       <div style="margin-top: 12px;">
-        <textarea id="decryptResult" readonly placeholder="解読結果が表示されます"></textarea>
+        <textarea id="decryptResult" readonly placeholder="正解の鍵なら解読結果が表示されます"></textarea>
       </div>
     </div>
   </div>
 
   <script>
-    let currentSlot = 1;
+    const CHECKSUM = "FX#"; // 共通の照合用合図
+    let currentEncryptSlot = 1;
+    let currentDecryptSlot = 1;
+
     let keys = JSON.parse(localStorage.getItem('saved_keys')) || { 1: '', 2: '', 3: '', 4: '', 5: '' };
 
-    document.getElementById('keyInput').value = keys[currentSlot] || '';
+    document.getElementById('keyInput').value = keys[currentEncryptSlot] || '';
 
-    function selectSlot(slot) {
-      currentSlot = slot;
-      document.querySelectorAll('.slot-btn').forEach((btn, idx) => {
+    // 暗号化側のスロット選択
+    function selectEncryptSlot(slot) {
+      currentEncryptSlot = slot;
+      document.querySelectorAll('.encrypt-slot').forEach((btn, idx) => {
+        btn.classList.toggle('active', (idx % 5) + 1 === slot);
+      });
+      document.getElementById('selectedEncryptLabel').innerText = slot;
+      document.getElementById('keyInput').value = keys[slot] || '';
+    }
+
+    // 解読側のスロット選択（手動照合用）
+    function selectDecryptSlot(slot) {
+      currentDecryptSlot = slot;
+      document.querySelectorAll('.decrypt-slot').forEach((btn, idx) => {
         btn.classList.toggle('active', idx + 1 === slot);
       });
-      document.getElementById('keyInput').value = keys[currentSlot] || '';
+      document.getElementById('selectedDecryptLabel').innerText = slot;
     }
 
     function saveSingleKey() {
-      keys[currentSlot] = document.getElementById('keyInput').value;
+      keys[currentEncryptSlot] = document.getElementById('keyInput').value;
       localStorage.setItem('saved_keys', JSON.stringify(keys));
-      alert(`鍵 ${currentSlot} を保存しました！`);
+      alert(`鍵 ${currentEncryptSlot} を保存しました！`);
     }
 
-    // 🔑 英大文字・小文字・数字・記号を混ぜたランダムハッシュ生成関数
     function generateRandomKey(seedStr, length) {
       let hash = 0;
       for (let i = 0; i < seedStr.length; i++) {
         hash = (hash << 5) - hash + seedStr.charCodeAt(i);
         hash |= 0;
       }
-      // 使用する文字セット（アルファベット大文字小文字＋数字＋記号）
       const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=';
       let result = '';
       let seed = Math.abs(hash);
@@ -239,15 +268,12 @@
       return result;
     }
 
-    // 🔥 英数記号混ざりの鍵1〜5を一括生成
     function generateMonthlyKeys() {
       const base = document.getElementById('basePassInput').value.trim();
       if (!base) return alert('ベース数字を入力してください');
 
       const now = new Date();
       const monthStr = String(now.getMonth() + 1).padStart(2, '0');
-
-      // スロットごとに異なる文字数（例: 10文字, 14文字, 12文字, 16文字, 11文字）
       const lengths = [10, 14, 12, 16, 11];
 
       for (let i = 1; i <= 5; i++) {
@@ -256,19 +282,19 @@
       }
 
       localStorage.setItem('saved_keys', JSON.stringify(keys));
-      selectSlot(currentSlot);
-      alert(`ベース数字「${base}」と今月（${monthStr}月）から、英数記号混ざりのランダムな鍵1〜5を生成しました！`);
+      selectEncryptSlot(currentEncryptSlot);
+      alert(`ベース数字「${base}」と今月（${monthStr}月）から鍵1〜5を一括生成しました！`);
     }
 
-    // 暗号化処理（選択中の鍵スロット番号を埋め込む）
+    // 暗号化処理
     function encryptMessage() {
       const text = document.getElementById('plainText').value;
-      const key = keys[currentSlot];
+      const key = keys[currentEncryptSlot];
       if (!text) return alert('メッセージを入力してください');
-      if (!key) return alert(`鍵 ${currentSlot} が設定されていません。「5つ一括生成」を押すか入力してください。`);
+      if (!key) return alert(`鍵 ${currentEncryptSlot} が設定されていません。「5つ一括生成」を押すか入力してください。`);
 
-      const header = `FX${currentSlot}#`;
-      const targetText = header + text;
+      // 秘密記号 + 本文
+      const targetText = CHECKSUM + text;
       
       let encrypted = '';
       for (let i = 0; i < targetText.length; i++) {
@@ -279,13 +305,13 @@
       document.getElementById('cipherResult').value = base64;
     }
 
-    // 解読処理（選択中スロットとの厳格照合）
+    // 🔓 解読処理（選ばれた「鍵番号」でのみ手動照合を行う！）
     function decryptMessage() {
       const input = document.getElementById('cipherInput').value.trim();
-      const key = keys[currentSlot];
+      const key = keys[currentDecryptSlot];
       
       if (!input) return alert('暗号文を入力してください');
-      if (!key) return alert(`現在選択中の「鍵 ${currentSlot}」が空欄です。正しい鍵を選択するか生成してください。`);
+      if (!key) return alert(`選択中の「鍵 ${currentDecryptSlot}」が空欄です。まずは鍵を一括生成してください。`);
 
       try {
         const decoded = decodeURIComponent(escape(atob(input)));
@@ -294,17 +320,17 @@
           tempDecrypted += String.fromCharCode(decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length));
         }
 
-        const targetHeader = `FX${currentSlot}#`;
-        if (tempDecrypted.startsWith(targetHeader)) {
-          document.getElementById('decryptResult').value = tempDecrypted.substring(targetHeader.length);
-          alert(`「鍵 ${currentSlot}」で照合成功！解読できました！`);
+        // 秘密記号 CHECKSUM で始まっているか手動チェック
+        if (tempDecrypted.startsWith(CHECKSUM)) {
+          document.getElementById('decryptResult').value = tempDecrypted.substring(CHECKSUM.length);
+          alert(`🎉 鍵 ${currentDecryptSlot} で正解！解読に成功しました！`);
         } else {
           document.getElementById('decryptResult').value = '';
-          alert(`解読失敗：現在選択中の「鍵 ${currentSlot}」では解読できません。相手がどの鍵番号で送ったか確認し、スロットボタン（1〜5）を切り替えてください。`);
+          alert(`❌ 「鍵 ${currentDecryptSlot}」では解読できませんでした。別の鍵ボタン（🔓1〜5）を選んで再度試してください。`);
         }
       } catch (e) {
         document.getElementById('decryptResult').value = '';
-        alert('不正な暗号文です。貼り付けた文字列を確認してください。');
+        alert('❌ 「鍵 ' + currentDecryptSlot + '」では解読できませんでした。（不正な文字列です）');
       }
     }
 
