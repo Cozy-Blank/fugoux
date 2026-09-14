@@ -1,0 +1,23 @@
+{
+  "name": "符号X - 高度暗号＆緊急SOS",
+  "short_name": "符号X",
+  "description": "高度暗号化と緊急SOS・安否確認機能を備えたツール",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1B4B46",
+  "theme_color": "#266B64",
+  "icons": [
+    {
+      "src": "angouicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "angouicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

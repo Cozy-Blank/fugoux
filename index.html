@@ -4,8 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>符号X - 高度暗号＆緊急SOS Tool</title>
+
+  <!-- 🖼 ファビコン ＆ SNS共有用アイコン（angouicon.png） -->
+  <link rel="icon" href="angouicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="angouicon.png">
+  <meta property="og:image" content="angouicon.png">
+
+  <!-- 📱 PWA（ホーム画面インストール）設定 -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#266B64">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="符号X">
+
   <style>
-    /* 🎨 カラーパレット（①セーフティ・エメラルド ＆ サンシャイン・オレンジ） */
+    /* 🎨 カラーパレット（①サイバー・ティール ＆ エナジー） */
     :root {
       --bg-color: #266B64;
       --card-bg: #1B4B46;
@@ -252,6 +265,15 @@
   </div>
 
   <script>
+    // PWAサービスワーカーの登録
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('PWA Service Worker 登録成功:', reg.scope))
+          .catch(err => console.log('PWA Service Worker 登録失敗:', err));
+      });
+    }
+
     let currentEncryptSlot = 1;
     let currentDecryptSlot = 1;
     let selectedSosText = "無事です！";
