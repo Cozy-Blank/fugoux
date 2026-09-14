@@ -327,6 +327,7 @@
       const msg = document.getElementById('sosResult').value;
       if (!msg) return alert("先に「現在地を取得して作成」ボタンを押してください。");
 
+      // スマホなど Web Share API に対応している場合
       if (navigator.share) {
         try {
           await navigator.share({
@@ -334,11 +335,16 @@
             text: msg
           });
         } catch (err) {
-          // キャンセル時
+          console.log('共有がキャンセルされました:', err);
         }
       } else {
-        navigator.clipboard.writeText(msg);
-        alert("メッセージをクリップボードにコピーしました！");
+        // PCや非対応ブラウザの場合はクリップボードにコピー
+        try {
+          await navigator.clipboard.writeText(msg);
+          alert("📲 メッセージをクリップボードにコピーしました！\nLINEやメールに貼り付けて送信してください。");
+        } catch (err) {
+          alert("コピーに失敗しました。手動でテキストを選択してコピーしてください。");
+        }
       }
     }
 
@@ -467,11 +473,15 @@
             text: cipherText
           });
         } catch (err) {
-          // キャンセル時
+          console.log('共有がキャンセルされました:', err);
         }
       } else {
-        navigator.clipboard.writeText(cipherText);
-        alert('暗号文をクリップボードにコピーしました！');
+        try {
+          await navigator.clipboard.writeText(cipherText);
+          alert('📲 暗号文をクリップボードにコピーしました！\nLINEやメールに貼り付けて送信してください。');
+        } catch (err) {
+          alert("コピーに失敗しました。手動でテキストを選択してコピーしてください。");
+        }
       }
     }
   </script>
