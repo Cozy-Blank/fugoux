@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>符号X - 偏愛Tool</title>
+  <style>
+    /* 🎨 カラーパレット（①ヴィンテージ・ティールを採用） */
+    :root {
+      --bg-color: #266B64;
+      --card-bg: #1B4B46;
+      --card-border: #3F8C84;
+      --accent-color: #FF6B00;
+      --accent-hover: #E05E00;
+      --text-color: #E0F2F1;
+      --text-muted: #A0C4C1;
+      --input-bg: #123330;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', meiryo, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      padding: 20px 10px;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 650px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* バナー表示エリア */
+    .banner-container {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      border: 1px solid var(--card-border);
+    }
+
+    .banner-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* カードデザイン */
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* 鍵管理スロット (5つの鍵) */
+    .key-slots {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .slot-btn {
+      background-color: var(--input-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-color);
+      padding: 8px 4px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .slot-btn.active {
+      background-color: var(--accent-color);
+      color: #fff;
+      font-weight: bold;
+      border-color: var(--accent-color);
+    }
+
+    .key-input-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    input, textarea {
+      width: 100%;
+      background-color: var(--input-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-color);
+      padding: 10px 12px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--accent-color);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    /* ボタン */
+    .btn {
+      background-color: var(--accent-color);
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--input-bg);
+      color: var(--text-color);
+    }
+
+    .hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- トップバナー -->
+    <div class="banner-container">
+      <img src="符号.png" alt="符号X 偏愛Tool">
+    </div>
+
+    <!-- 1. 鍵保管庫（5つのスロット） -->
+    <div class="card">
+      <h2>🔐 暗号鍵の保存庫（5つのキー）</h2>
+      <div class="key-slots">
+        <button class="slot-btn active" onclick="selectSlot(1)">🔑 鍵 1</button>
+        <button class="slot-btn" onclick="selectSlot(2)">🔑 鍵 2</button>
+        <button class="slot-btn" onclick="selectSlot(3)">🔑 鍵 3</button>
+        <button class="slot-btn" onclick="selectSlot(4)">🔑 鍵 4</button>
+        <button class="slot-btn" onclick="selectSlot(5)">🔑 鍵 5</button>
+      </div>
+      <div class="key-input-group">
+        <input type="password" id="keyInput" placeholder="選択中の鍵を入力 (例: secret123)">
+        <button class="btn" style="width: auto; white-space: nowrap;" onclick="saveKey()">保存</button>
+      </div>
+      <p class="hint">※暗号化・復号化に使用する鍵を選択・保存できます。</p>
+    </div>
+
+    <!-- 2. 暗号化エリア -->
+    <div class="card">
+      <h2>✉️ メッセージを暗号化する</h2>
+      <textarea id="plainText" placeholder="ここにLINEやメールで送りたい秘密のメッセージを入力..."></textarea>
+      <button class="btn" onclick="encryptMessage()">暗号を作成する</button>
+      
+      <div style="margin-top: 15px;">
+        <textarea id="cipherResult" readonly placeholder="作成された暗号がここに表示されます"></textarea>
+        <button class="btn btn-secondary" onclick="copyResult()">📋 LINE・メール用にコピー</button>
+      </div>
+    </div>
+
+    <!-- 3. 解読エリア -->
+    <div class="card">
+      <h2>🔓 暗号を解読（復号）する</h2>
+      <textarea id="cipherInput" placeholder="受け取った暗号文を貼り付けてください..."></textarea>
+      <button class="btn" onclick="decryptMessage()">暗号を解読する</button>
+      
+      <div style="margin-top: 15px;">
+        <textarea id="decryptResult" readonly placeholder="解読されたメッセージがここに表示されます"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 5つの鍵管理
+    let currentSlot = 1;
+    const keys = JSON.parse(localStorage.getItem('saved_keys')) || { 1: '', 2: '', 3: '', 4: '', 5: '' };
+
+    // 識別記号（一見わかりづらい3文字記号）
+    const prefixes = { 1: '§A-', 2: '§B-', 3: '§C-', 4: '§D-', 5: '§E-' };
+
+    document.getElementById('keyInput').value = keys[currentSlot];
+
+    function selectSlot(slot) {
+      currentSlot = slot;
+      document.querySelectorAll('.slot-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', idx + 1 === slot);
+      });
+      document.getElementById('keyInput').value = keys[currentSlot] || '';
+    }
+
+    function saveKey() {
+      keys[currentSlot] = document.getElementById('keyInput').value;
+      localStorage.setItem('saved_keys', JSON.stringify(keys));
+      alert(`鍵 ${currentSlot} を保存しました！`);
+    }
+
+    // 文字列を暗号化（Base64 + XOR演算 + プレフィックス）
+    function encryptMessage() {
+      const text = document.getElementById('plainText').value;
+      const key = keys[currentSlot];
+      if (!text) return alert('メッセージを入力してください');
+      if (!key) return alert(`鍵 ${currentSlot} が設定されていません`);
+
+      // 簡易暗号化処理 (XOR)
+      let encrypted = '';
+      for (let i = 0; i < text.length; i++) {
+        encrypted += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+      }
+      
+      // UTF-8エンコードしてBase64化 + 秘密の識別記号(例: §A-)を先頭に付与
+      const base64 = btoa(unescape(encodeURIComponent(encrypted)));
+      const result = prefixes[currentSlot] + base64;
+      
+      document.getElementById('cipherResult').value = result;
+    }
+
+    // 暗号を解読
+    function decryptMessage() {
+      const input = document.getElementById('cipherInput').value.trim();
+      if (!input) return alert('暗号文を入力してください');
+
+      // 先頭の識別記号をチェック
+      let matchedSlot = null;
+      let rawCipher = input;
+
+      for (const [slot, prefix] of Object.entries(prefixes)) {
+        if (input.startsWith(prefix)) {
+          matchedSlot = slot;
+          rawCipher = input.replace(prefix, '');
+          break;
+        }
+      }
+
+      if (matchedSlot) {
+        selectSlot(parseInt(matchedSlot));
+      }
+
+      const key = keys[currentSlot];
+      if (!key) return alert(`暗号の識別マークを検知しました。解読には「鍵 ${currentSlot}」の入力が必要です。`);
+
+      try {
+        const decoded = decodeURIComponent(escape(atob(rawCipher)));
+        let decrypted = '';
+        for (let i = 0; i < decoded.length; i++) {
+          decrypted += String.fromCharCode(decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        }
+        document.getElementById('decryptResult').value = decrypted;
+      } catch (e) {
+        alert('解読に失敗しました。鍵が正しいか確認してください。');
+      }
+    }
+
+    function copyResult() {
+      const copyText = document.getElementById('cipherResult');
+      if (!copyText.value) return;
+      copyText.select();
+      navigator.clipboard.writeText(copyText.value);
+      alert('暗号文をクリップボードにコピーしました！LINEやメールに貼り付けて送信してください。');
+    }
+  </script>
+</body>
+</html>
