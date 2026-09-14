@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>符号X - 偏愛Tool</title>
+  <title>符号X - 高度暗号Tool</title>
   <style>
     /* 🎨 カラーパレット（①サイバー・ティールを採用） */
     :root {
@@ -153,17 +153,15 @@
     <div class="card">
       <h2>🔐 暗号鍵の保存庫（5つのキー）</h2>
 
-      <!-- 一括生成機能 -->
       <div class="auto-gen-box">
-        <h3>⚡ 月替わり・英数記号ランダム鍵一括生成</h3>
+        <h3>⚡ 月替わり・高度ランダム鍵一括生成</h3>
         <div class="key-input-group">
           <input type="text" id="basePassInput" placeholder="ベース数字+今月">
           <button class="btn" style="width: auto; min-width: 110px; margin-top:0;" onclick="generateMonthlyKeys()">5つ一括生成</button>
         </div>
-        <p class="hint">※入力された「ベース数字＋今月」から、英数記号を含む複雑な鍵1〜5を生成します。</p>
+        <p class="hint">※入力された値からAES規格に最適化された暗号鍵1〜5を安全に生成します。</p>
       </div>
 
-      <!-- 鍵スロット切替（編集・確認用） -->
       <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:6px;">鍵の確認・手動保存:</p>
       <div class="key-slots">
         <button class="slot-btn encrypt-slot active" onclick="selectEncryptSlot(1)">🔑 1</button>
@@ -180,7 +178,7 @@
 
     <!-- 2. 暗号化エリア -->
     <div class="card">
-      <h2>✉️ メッセージを暗号化する</h2>
+      <h2>✉️ メッセージを暗号化する（AES-GCM）</h2>
       <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:6px;">使用する鍵を選択してください:</p>
       <div class="key-slots">
         <button class="slot-btn encrypt-slot active" onclick="selectEncryptSlot(1)">🔑 1</button>
@@ -193,12 +191,12 @@
       <button class="btn" onclick="encryptMessage()">「鍵 <span id="selectedEncryptLabel">1</span>」で暗号を作成</button>
       
       <div style="margin-top: 12px;">
-        <textarea id="cipherResult" readonly placeholder="作成された暗号が表示されます"></textarea>
+        <textarea id="cipherResult" readonly placeholder="作成された高度暗号文が表示されます"></textarea>
         <button class="btn btn-secondary" onclick="copyResult()">📋 暗号文をコピーする</button>
       </div>
     </div>
 
-    <!-- 3. 解読エリア（手動で鍵を選んで照合！） -->
+    <!-- 3. 解読エリア -->
     <div class="card">
       <h2>🔓 暗号を解読（復号）する</h2>
       <p style="font-size:0.8rem; color:var(--accent-color); margin-bottom:6px; font-weight:bold;">手動照合：どの鍵で解読を試しますか？</p>
@@ -219,13 +217,11 @@
   </div>
 
   <script>
-    const CHECKSUM = "FX#"; // 共通の照合用合図
     let currentEncryptSlot = 1;
     let currentDecryptSlot = 1;
 
     let keys = JSON.parse(localStorage.getItem('saved_keys')) || { 1: '', 2: '', 3: '', 4: '', 5: '' };
 
-    // 🌟 初期化処理：今月を自動取得してデフォルトで「5561031 + 今月(2桁)」をセット！
     window.addEventListener('DOMContentLoaded', () => {
       const now = new Date();
       const monthStr = String(now.getMonth() + 1).padStart(2, '0');
@@ -234,7 +230,6 @@
       document.getElementById('keyInput').value = keys[currentEncryptSlot] || '';
     });
 
-    // 暗号化側のスロット選択
     function selectEncryptSlot(slot) {
       currentEncryptSlot = slot;
       document.querySelectorAll('.encrypt-slot').forEach((btn, idx) => {
@@ -244,7 +239,6 @@
       document.getElementById('keyInput').value = keys[slot] || '';
     }
 
-    // 解読側のスロット選択（手動照合用）
     function selectDecryptSlot(slot) {
       currentDecryptSlot = slot;
       document.querySelectorAll('.decrypt-slot').forEach((btn, idx) => {
@@ -259,83 +253,106 @@
       alert(`鍵 ${currentEncryptSlot} を保存しました！`);
     }
 
-    function generateRandomKey(seedStr, length) {
-      let hash = 0;
-      for (let i = 0; i < seedStr.length; i++) {
-        hash = (hash << 5) - hash + seedStr.charCodeAt(i);
-        hash |= 0;
-      }
-      const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=';
-      let result = '';
-      let seed = Math.abs(hash);
-      for (let i = 0; i < length; i++) {
-        seed = (seed * 9301 + 49297) % 233280;
-        result += charset.charAt(seed % charset.length);
-      }
-      return result;
+    // SHA-256ハッシュ関数（高速・強力なランダム生成用）
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    // 🔥 入力欄に表示された数字（例: 556103109）をダイレクトに使って一括生成！
-    function generateMonthlyKeys() {
+    async function generateMonthlyKeys() {
       const rawInput = document.getElementById('basePassInput').value.trim();
       if (!rawInput) return alert('数字を入力してください');
 
-      const lengths = [10, 14, 12, 16, 11];
-
       for (let i = 1; i <= 5; i++) {
-        // 入力欄の文字列（例: 556103109）をそのまま種にして生成
-        const seedStr = `SALT_KEY_${rawInput}_SLOT_${i}`;
-        keys[i] = generateRandomKey(seedStr, lengths[i - 1]);
+        const hash = await sha256(`SALT_KEY_${rawInput}_SLOT_${i}`);
+        // ハッシュから見た目もバラバラな英数記号鍵を作成
+        keys[i] = hash.substring(0, 12 + i * 2); 
       }
 
       localStorage.setItem('saved_keys', JSON.stringify(keys));
       selectEncryptSlot(currentEncryptSlot);
-      alert(`「${rawInput}」から鍵1〜5を一括生成しました！`);
+      alert(`「${rawInput}」から高度な暗号鍵1〜5を一括生成しました！`);
     }
 
-    // 暗号化処理
-    function encryptMessage() {
+    // 🔑 暗号用鍵オブジェクト（CryptoKey）に変換する関数
+    async function getCryptoKey(secretStr) {
+      const enc = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey(
+        "raw", enc.encode(secretStr), "PBKDF2", false, ["deriveKey"]
+      );
+      return crypto.subtle.deriveKey(
+        {
+          name: "PBKDF2",
+          salt: enc.encode("FUGOU_X_SALT"),
+          iterations: 100000,
+          hash: "SHA-256"
+        },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt", "decrypt"]
+      );
+    }
+
+    // ✉️ AES-GCM 高度暗号化処理
+    async function encryptMessage() {
       const text = document.getElementById('plainText').value;
-      const key = keys[currentEncryptSlot];
+      const keyStr = keys[currentEncryptSlot];
       if (!text) return alert('メッセージを入力してください');
-      if (!key) return alert(`鍵 ${currentEncryptSlot} が設定されていません。「5つ一括生成」を押すか入力してください。`);
-
-      const targetText = CHECKSUM + text;
-      
-      let encrypted = '';
-      for (let i = 0; i < targetText.length; i++) {
-        encrypted += String.fromCharCode(targetText.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-      }
-      
-      const base64 = btoa(unescape(encodeURIComponent(encrypted)));
-      document.getElementById('cipherResult').value = base64;
-    }
-
-    // 🔓 解読処理
-    function decryptMessage() {
-      const input = document.getElementById('cipherInput').value.trim();
-      const key = keys[currentDecryptSlot];
-      
-      if (!input) return alert('暗号文を入力してください');
-      if (!key) return alert(`選択中の「鍵 ${currentDecryptSlot}」が空欄です。まずは鍵を一括生成してください。`);
+      if (!keyStr) return alert(`鍵 ${currentEncryptSlot} が設定されていません。一括生成してください。`);
 
       try {
-        const decoded = decodeURIComponent(escape(atob(input)));
-        let tempDecrypted = '';
-        for (let i = 0; i < decoded.length; i++) {
-          tempDecrypted += String.fromCharCode(decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-        }
+        const cryptoKey = await getCryptoKey(keyStr);
+        const iv = crypto.getRandomValues(new Uint8Array(12)); // 毎回使い捨てるランダムIV
+        const encodedText = new TextEncoder().encode(text);
 
-        if (tempDecrypted.startsWith(CHECKSUM)) {
-          document.getElementById('decryptResult').value = tempDecrypted.substring(CHECKSUM.length);
-          alert(`🎉 鍵 ${currentDecryptSlot} で正解！解読に成功しました！`);
-        } else {
-          document.getElementById('decryptResult').value = '';
-          alert(`❌ 「鍵 ${currentDecryptSlot}」では解読できませんでした。別の鍵ボタン（🔓1〜5）を選んで再度試してください。`);
-        }
+        const encryptedContent = await crypto.subtle.encrypt(
+          { name: "AES-GCM", iv: iv },
+          cryptoKey,
+          encodedText
+        );
+
+        // IV と 暗号文 を結合してBase64化
+        const combined = new Uint8Array(iv.length + encryptedContent.byteLength);
+        combined.set(iv, 0);
+        combined.set(new Uint8Array(encryptedContent), iv.length);
+
+        const base64Str = btoa(String.fromCharCode(...combined));
+        document.getElementById('cipherResult').value = base64Str;
+      } catch (e) {
+        alert('暗号化に失敗しました。');
+      }
+    }
+
+    // 🔓 AES-GCM 高度解読処理（手動照合）
+    async function decryptMessage() {
+      const input = document.getElementById('cipherInput').value.trim();
+      const keyStr = keys[currentDecryptSlot];
+      
+      if (!input) return alert('暗号文を入力してください');
+      if (!keyStr) return alert(`選択中の「鍵 ${currentDecryptSlot}」が空欄です。まずは鍵を一括生成してください。`);
+
+      try {
+        const combined = new Uint8Array(atob(input).split('').map(c => c.charCodeAt(0)));
+        const iv = combined.slice(0, 12);
+        const data = combined.slice(12);
+
+        const cryptoKey = await getCryptoKey(keyStr);
+
+        const decryptedContent = await crypto.subtle.decrypt(
+          { name: "AES-GCM", iv: iv },
+          cryptoKey,
+          data
+        );
+
+        const decodedText = new TextDecoder().decode(decryptedContent);
+        document.getElementById('decryptResult').value = decodedText;
+        alert(`🎉 鍵 ${currentDecryptSlot} で正解！解読に成功しました！`);
       } catch (e) {
         document.getElementById('decryptResult').value = '';
-        alert('❌ 「鍵 ' + currentDecryptSlot + '」では解読できませんでした。（不正な文字列です）');
+        alert(`❌ 「鍵 ${currentDecryptSlot}」では解読できませんでした。（鍵が違うか、暗号文が壊れています）`);
       }
     }
 
