@@ -148,7 +148,7 @@
     }
     textarea { width: 100%; resize: vertical; min-height: 70px; line-height: 1.3; }
 
-    /* 🔑 鍵一括入力エリアのレイアウト調整 */
+    /* 🔑 鍵一括入力エリア（単位・助詞を排除） */
     .key-input-group { 
       display: flex; 
       align-items: center;
@@ -164,11 +164,12 @@
       font-size: 0.95rem;
       letter-spacing: 1px;
     }
-    .month-input {
-      width: 65px;
+    .extra-code-input {
+      width: 60px;
       text-align: center;
       font-weight: bold;
       border: 2px solid var(--accent-color);
+      letter-spacing: 2px;
     }
 
     .btn { 
@@ -229,16 +230,15 @@
       </div>
     </div>
 
-    <!-- 1. 鍵保管庫（月数だけ手動入力） -->
+    <!-- 1. 鍵保管庫（推測されやすい表記を徹底排除） -->
     <div class="card">
-      <h2>🔐 暗号鍵の一括自動更新</h2>
-      <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">ベース数字の後ろに「対象の月（2桁）」を手動入力して一括保存してください：</p>
+      <h2>🔐 暗号鍵の一括更新</h2>
+      <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">ベースコード末尾に指定の2桁を入力して一括保存してください：</p>
       
       <div class="key-input-group" style="margin-bottom: 8px;">
         <span class="base-pass-static">5561031</span>
-        <input type="number" id="monthInput" class="month-input" placeholder="月" min="1" max="12" maxlength="2">
-        <span style="font-size:0.85rem; color:var(--text-color);">月</span>
-        <button class="btn" style="width: auto; flex-grow: 1; margin-top:0;" onclick="generateMonthlyKeys()">一括保存</button>
+        <input type="text" id="extraCodeInput" class="extra-code-input" placeholder="00" maxlength="2">
+        <button class="btn" style="width: auto; flex-grow: 1; margin-top:0;" onclick="generateKeys()">一括保存</button>
       </div>
 
       <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">使用する暗号鍵番号を選択:</p>
@@ -374,14 +374,14 @@
       return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    // ⚡ 手動入力された「月」を使って一括自動生成＆保存
-    async function generateMonthlyKeys() {
-      const monthVal = document.getElementById('monthInput').value.trim();
-      if (!monthVal) return alert('月数を入力してください（例: 9 または 09）');
+    // ⚡ 手動入力された「2桁のコード」を使って一括自動生成＆保存
+    async function generateKeys() {
+      const codeVal = document.getElementById('extraCodeInput').value.trim();
+      if (!codeVal) return alert('末尾のコード（2桁）を入力してください');
 
-      // 月数を2桁表示（例: 9 -> 09）に揃える
-      const monthStr = String(monthVal).padStart(2, '0');
-      const combinedPass = `5561031${monthStr}`;
+      // 1桁入力の場合も自動的に2桁（例: 9 -> 09）にする安全補正
+      const codeStr = String(codeVal).padStart(2, '0');
+      const combinedPass = `5561031${codeStr}`;
 
       for (let i = 1; i <= 5; i++) {
         const hash = await sha256(`SALT_KEY_${combinedPass}_SLOT_${i}`);
@@ -389,7 +389,7 @@
       }
 
       localStorage.setItem('saved_keys', JSON.stringify(keys));
-      alert(`🎉 「5561031${monthStr}」を元にして、鍵1〜5を自動更新・保存しました！`);
+      alert(`🎉 鍵1〜5を更新・保存しました！`);
     }
 
     async function getCryptoKey(secretStr) {
