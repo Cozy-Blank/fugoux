@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>符号X - 高度暗号＆緊急SOS Tool</title>
   <style>
-    /* 🎨 カラーパレット（①サイバー・ティール ＆ エマージェンシー・レッド） */
+    /* 🎨 カラーパレット（①セーフティ・エメラルド ＆ サンシャイン・オレンジ） */
     :root {
       --bg-color: #266B64;
       --card-bg: #1B4B46;
@@ -103,7 +103,7 @@
       border-color: var(--accent-color);
     }
 
-    /* SOS定型文ボタン（スリム化） */
+    /* SOS定型文ボタン */
     .sos-btn {
       background-color: #3F1B1B;
       border: 1px solid var(--sos-border);
@@ -183,11 +183,11 @@
       <img src="符号.png" alt="符号X 偏愛Tool">
     </div>
 
-    <!-- 🚨 緊急SOS通知エリア（スリム化） -->
+    <!-- 🚨 緊急SOS・安否確認エリア -->
     <div class="card sos-card">
-      <h2>🚨 緊急SOS（位置情報送信）</h2>
+      <h2>🚨 緊急SOS・安否確認（位置情報送信）</h2>
       <div class="sos-phrase-grid">
-        <button class="sos-btn active" onclick="selectSosPhrase(this, '助けて！')">🚨 助けて！</button>
+        <button class="sos-btn active" onclick="selectSosPhrase(this, '無事です！')">🍀 無事です！</button>
         <button class="sos-btn" onclick="selectSosPhrase(this, '充電がありません。')">🔋 充電がありません</button>
         <button class="sos-btn" onclick="selectSosPhrase(this, '緊急事態です。警察に連絡してください！')">👮 警察に連絡して</button>
         <button class="sos-btn" onclick="selectSosPhrase(this, '体調が急変しました。救急車を呼んでください！')">🚑 救急車を呼んで</button>
@@ -196,12 +196,12 @@
       <button class="btn btn-sos-main" onclick="sendSosAlert()">📍 現在地を取得して作成</button>
 
       <div style="margin-top: 6px;">
-        <textarea id="sosResult" placeholder="作成されたSOS文が表示されます" style="background:#1F0D0D; border-color:var(--sos-border); min-height:55px; font-size:0.8rem;"></textarea>
+        <textarea id="sosResult" placeholder="作成されたメッセージが表示されます" style="background:#1F0D0D; border-color:var(--sos-border); min-height:55px; font-size:0.8rem;"></textarea>
         <button class="btn btn-secondary" style="border-color:var(--sos-border); color:#FFD1D1; margin-top:4px;" onclick="shareSosMessage()">📲 LINE・メールで共有</button>
       </div>
     </div>
 
-    <!-- 1. 鍵保管庫（シンプル化） -->
+    <!-- 1. 鍵保管庫 -->
     <div class="card">
       <h2>🔐 暗号鍵の一括自動更新</h2>
       <div class="key-input-group" style="margin-bottom: 8px;">
@@ -227,7 +227,7 @@
       
       <div style="margin-top: 8px;">
         <textarea id="cipherResult" readonly placeholder="作成された暗号文が表示されます"></textarea>
-        <button class="btn btn-secondary" onclick="copyResult()">📋 暗号文をコピーする</button>
+        <button class="btn btn-secondary" onclick="shareCipherResult()">📲 LINE・メールで送信・コピーする</button>
       </div>
     </div>
 
@@ -254,7 +254,7 @@
   <script>
     let currentEncryptSlot = 1;
     let currentDecryptSlot = 1;
-    let selectedSosText = "助けて！";
+    let selectedSosText = "無事です！";
 
     let keys = JSON.parse(localStorage.getItem('saved_keys')) || { 1: '', 2: '', 3: '', 4: '', 5: '' };
 
@@ -279,7 +279,7 @@
 
       if (!navigator.geolocation) {
         alert("お使いのブラウザは位置情報（GPS）に対応していません。");
-        resultArea.value = `【SOS】${selectedSosText}\n（※位置情報の取得に失敗しました）`;
+        resultArea.value = `【安否確認】${selectedSosText}\n（※位置情報の取得に失敗しました）`;
         return;
       }
 
@@ -289,18 +289,18 @@
           const lng = position.coords.longitude;
           const mapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
           
-          const fullMessage = `【緊急SOS】${selectedSosText}\n📍現在地: ${mapsUrl}`;
+          const fullMessage = `【安否確認】${selectedSosText}\n📍現在地: ${mapsUrl}`;
           resultArea.value = fullMessage;
         },
         (error) => {
           alert("位置情報の取得を許可してください。");
-          resultArea.value = `【SOS】${selectedSosText}\n（※位置情報の取得に失敗しました）`;
+          resultArea.value = `【安否確認】${selectedSosText}\n（※位置情報の取得に失敗しました）`;
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
     }
 
-    // 📲 Web Share API による一発シェア
+    // 📲 Web Share API による一発シェア（SOS用）
     async function shareSosMessage() {
       const msg = document.getElementById('sosResult').value;
       if (!msg) return alert("先に「現在地を取得して作成」ボタンを押してください。");
@@ -308,11 +308,11 @@
       if (navigator.share) {
         try {
           await navigator.share({
-            title: '【緊急SOS】',
+            title: '【安否確認】',
             text: msg
           });
         } catch (err) {
-          // シェアキャンセル時など
+          // キャンセル時
         }
       } else {
         navigator.clipboard.writeText(msg);
@@ -433,12 +433,24 @@
       }
     }
 
-    function copyResult() {
-      const copyText = document.getElementById('cipherResult');
-      if (!copyText.value) return;
-      copyText.select();
-      navigator.clipboard.writeText(copyText.value);
-      alert('暗号文をコピーしました！');
+    // 📲 暗号文送信・シェア関数
+    async function shareCipherResult() {
+      const cipherText = document.getElementById('cipherResult').value;
+      if (!cipherText) return alert('先に暗号文を生成してください。');
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: '【符号X】暗号メッセージ',
+            text: cipherText
+          });
+        } catch (err) {
+          // キャンセル時
+        }
+      } else {
+        navigator.clipboard.writeText(cipherText);
+        alert('暗号文をクリップボードにコピーしました！');
+      }
     }
   </script>
 </body>
