@@ -181,7 +181,6 @@
       border: 1px dashed var(--accent-color);
       padding: 12px;
       border-radius: 8px;
-      margin-bottom: 14px;
     }
     .auto-gen-box h3 { font-size: 0.88rem; color: var(--accent-color); margin-bottom: 8px; }
   </style>
@@ -199,7 +198,7 @@
       <p style="font-size:0.8rem; color:#FFB8B8; margin-bottom:8px;">1. 定型文を選択（タップ）:</p>
       <div class="sos-phrase-grid">
         <button class="sos-btn active" onclick="selectSosPhrase(this, '助けて！')">🚨 助けて！</button>
-        <button class="sos-btn" onclick="selectSosPhrase(this, '困っています。')">⚠️ 困っています</button>
+        <button class="sos-btn" onclick="selectSosPhrase(this, '充電がありません。')">🔋 充電がありません</button>
         <button class="sos-btn" onclick="selectSosPhrase(this, '緊急事態です。警察に連絡してください！')">👮 警察に連絡して</button>
         <button class="sos-btn" onclick="selectSosPhrase(this, '体調が急変しました。救急車を呼んでください！')">🚑 救急車を呼んで</button>
       </div>
@@ -214,43 +213,31 @@
 
     <!-- 1. 鍵保管庫 -->
     <div class="card">
-      <h2>🔐 暗号鍵の保存庫（5つのキー）</h2>
-      <div class="auto-gen-box">
-        <h3>⚡ 月替わり・高度ランダム鍵一括生成</h3>
+      <h2>🔐 暗号鍵の一括生成・使用鍵選択</h2>
+      <div class="auto-gen-box" style="margin-bottom: 12px;">
+        <h3>⚡ 月替わり暗号鍵 一括自動更新</h3>
         <div class="key-input-group">
           <input type="text" id="basePassInput" placeholder="ベース数字+今月">
-          <button class="btn" style="width: auto; min-width: 110px; margin-top:0;" onclick="generateMonthlyKeys()">5つ一括生成</button>
+          <button class="btn" style="width: auto; min-width: 120px; margin-top:0;" onclick="generateMonthlyKeys()">一括自動保存</button>
         </div>
-        <p class="hint">※入力された値からAES規格に最適化された暗号鍵1〜5を安全に生成します。</p>
+        <p class="hint">※「一括自動保存」を押すと、数字から鍵1〜5が自動生成＆一括保存されます。</p>
       </div>
 
-      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:6px;">鍵の確認・手動保存:</p>
-      <div class="key-slots">
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:6px;">暗号化に使用する鍵番号を選択:</p>
+      <div class="key-slots" style="margin-bottom: 0;">
         <button class="slot-btn encrypt-slot active" onclick="selectEncryptSlot(1)">🔑 1</button>
         <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(2)">🔑 2</button>
         <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(3)">🔑 3</button>
         <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(4)">🔑 4</button>
         <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(5)">🔑 5</button>
-      </div>
-      <div class="key-input-group">
-        <input type="password" id="keyInput" placeholder="選択中の鍵">
-        <button class="btn" style="width: auto; min-width: 90px; margin-top:0;" onclick="saveSingleKey()">保存</button>
       </div>
     </div>
 
     <!-- 2. 暗号化エリア -->
     <div class="card">
       <h2>✉️ メッセージを暗号化する（AES-GCM）</h2>
-      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:6px;">使用する鍵を選択してください:</p>
-      <div class="key-slots">
-        <button class="slot-btn encrypt-slot active" onclick="selectEncryptSlot(1)">🔑 1</button>
-        <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(2)">🔑 2</button>
-        <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(3)">🔑 3</button>
-        <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(4)">🔑 4</button>
-        <button class="slot-btn encrypt-slot" onclick="selectEncryptSlot(5)">🔑 5</button>
-      </div>
       <textarea id="plainText" placeholder="送りたいメッセージを入力..."></textarea>
-      <button class="btn" onclick="encryptMessage()">「鍵 <span id="selectedEncryptLabel">1</span>」で暗号を作成</button>
+      <button class="btn" onclick="encryptMessage()">暗号を生成する</button>
       
       <div style="margin-top: 12px;">
         <textarea id="cipherResult" readonly placeholder="作成された高度暗号文が表示されます"></textarea>
@@ -290,7 +277,6 @@
       const monthStr = String(now.getMonth() + 1).padStart(2, '0');
       const defaultPass = `5561031${monthStr}`;
       document.getElementById('basePassInput').value = defaultPass;
-      document.getElementById('keyInput').value = keys[currentEncryptSlot] || '';
     });
 
     // 🚨 SOS定型文選択
@@ -343,20 +329,17 @@
           // シェアキャンセル時など
         }
       } else {
-        // Share API非対応（PC等）の場合はコピー
         navigator.clipboard.writeText(msg);
         alert("メッセージをクリップボードにコピーしました！LINEやメールに貼り付けて送信してください。");
       }
     }
 
-    // 🔑 暗号化関連の処理
+    // 🔑 暗号化スロット選択
     function selectEncryptSlot(slot) {
       currentEncryptSlot = slot;
       document.querySelectorAll('.encrypt-slot').forEach((btn, idx) => {
         btn.classList.toggle('active', (idx % 5) + 1 === slot);
       });
-      document.getElementById('selectedEncryptLabel').innerText = slot;
-      document.getElementById('keyInput').value = keys[slot] || '';
     }
 
     function selectDecryptSlot(slot) {
@@ -367,12 +350,6 @@
       document.getElementById('selectedDecryptLabel').innerText = slot;
     }
 
-    function saveSingleKey() {
-      keys[currentEncryptSlot] = document.getElementById('keyInput').value;
-      localStorage.setItem('saved_keys', JSON.stringify(keys));
-      alert(`鍵 ${currentEncryptSlot} を保存しました！`);
-    }
-
     async function sha256(message) {
       const msgBuffer = new TextEncoder().encode(message);
       const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -380,6 +357,7 @@
       return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
+    // ⚡ 一括自動更新＆保存処理
     async function generateMonthlyKeys() {
       const rawInput = document.getElementById('basePassInput').value.trim();
       if (!rawInput) return alert('数字を入力してください');
@@ -390,8 +368,7 @@
       }
 
       localStorage.setItem('saved_keys', JSON.stringify(keys));
-      selectEncryptSlot(currentEncryptSlot);
-      alert(`「${rawInput}」から高度な暗号鍵1〜5を一括生成しました！`);
+      alert(`「${rawInput}」をもとに、鍵1〜5を自動生成・一括保存（更新）しました！`);
     }
 
     async function getCryptoKey(secretStr) {
@@ -417,7 +394,7 @@
       const text = document.getElementById('plainText').value;
       const keyStr = keys[currentEncryptSlot];
       if (!text) return alert('メッセージを入力してください');
-      if (!keyStr) return alert(`鍵 ${currentEncryptSlot} が設定されていません。一括生成してください。`);
+      if (!keyStr) return alert(`鍵が設定されていません。「一括自動保存」ボタンを押してください。`);
 
       try {
         const cryptoKey = await getCryptoKey(keyStr);
@@ -446,7 +423,7 @@
       const keyStr = keys[currentDecryptSlot];
       
       if (!input) return alert('暗号文を入力してください');
-      if (!keyStr) return alert(`選択中の「鍵 ${currentDecryptSlot}」が空欄です。まずは鍵を一括生成してください。`);
+      if (!keyStr) return alert(`選択中の「鍵 ${currentDecryptSlot}」が空欄です。まずは「一括自動保存」を押してください。`);
 
       try {
         const combined = new Uint8Array(atob(input).split('').map(c => c.charCodeAt(0)));
