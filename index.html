@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>符号X - 高度暗号Tool</title>
+  <title>符号X - 高度暗号＆緊急SOS Tool</title>
   <style>
-    /* 🎨 カラーパレット（①サイバー・ティールを採用） */
+    /* 🎨 カラーパレット（①サイバー・ティール ＆ エマージェンシー・レッド） */
     :root {
       --bg-color: #266B64;
       --card-bg: #1B4B46;
@@ -15,6 +15,12 @@
       --text-color: #E0F2F1;
       --text-muted: #A0C4C1;
       --input-bg: #123330;
+      
+      /* SOS専用カラー */
+      --sos-card-bg: #2D1414;
+      --sos-border: #822828;
+      --sos-red: #EF4444;
+      --sos-red-hover: #DC2626;
     }
 
     * { 
@@ -59,14 +65,23 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    h2 { font-size: 1.05rem; margin-bottom: 12px; color: var(--accent-color); }
+    /* 🚨 SOSカード専用スタイル */
+    .card.sos-card {
+      background-color: var(--sos-card-bg);
+      border: 2px solid var(--sos-border);
+    }
 
-    .key-slots { 
+    h2 { font-size: 1.05rem; margin-bottom: 12px; color: var(--accent-color); }
+    .sos-card h2 { color: var(--sos-red); }
+
+    .key-slots, .sos-phrase-grid { 
       display: grid; 
-      grid-template-columns: repeat(5, 1fr); 
-      gap: 6px; 
+      grid-template-columns: repeat(2, 1fr); 
+      gap: 8px; 
       margin-bottom: 12px; 
     }
+    .key-slots { grid-template-columns: repeat(5, 1fr); gap: 6px; }
+
     .slot-btn { 
       background-color: var(--input-bg); 
       border: 1px solid var(--card-border); 
@@ -85,6 +100,28 @@
       color: #fff; 
       font-weight: bold; 
       border-color: var(--accent-color);
+    }
+
+    /* SOS定型文ボタン */
+    .sos-btn {
+      background-color: #3F1B1B;
+      border: 1px solid var(--sos-border);
+      color: #FFD1D1;
+      padding: 10px 8px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      cursor: pointer;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: bold;
+    }
+    .sos-btn.active {
+      background-color: var(--sos-red);
+      color: #fff;
+      border-color: var(--sos-red);
     }
 
     input, textarea { 
@@ -124,6 +161,13 @@
       transition: background-color 0.2s;
     }
     .btn:active { background-color: var(--accent-hover); }
+    
+    .btn-sos-main {
+      background-color: var(--sos-red);
+      font-size: 1rem;
+    }
+    .btn-sos-main:active { background-color: var(--sos-red-hover); }
+
     .btn-secondary { 
       background-color: transparent; 
       border: 1px solid var(--card-border); 
@@ -149,10 +193,28 @@
       <img src="符号.png" alt="符号X 偏愛Tool">
     </div>
 
+    <!-- 🚨 緊急SOS通知エリア -->
+    <div class="card sos-card">
+      <h2>🚨 緊急SOS（位置情報＋メッセージ送信）</h2>
+      <p style="font-size:0.8rem; color:#FFB8B8; margin-bottom:8px;">1. 定型文を選択（タップ）:</p>
+      <div class="sos-phrase-grid">
+        <button class="sos-btn active" onclick="selectSosPhrase(this, '助けて！')">🚨 助けて！</button>
+        <button class="sos-btn" onclick="selectSosPhrase(this, '困っています。')">⚠️ 困っています</button>
+        <button class="sos-btn" onclick="selectSosPhrase(this, '緊急事態です。警察に連絡してください！')">👮 警察に連絡して</button>
+        <button class="sos-btn" onclick="selectSosPhrase(this, '体調が急変しました。救急車を呼んでください！')">🚑 救急車を呼んで</button>
+      </div>
+
+      <button class="btn btn-sos-main" onclick="sendSosAlert()">📍 現在地を取得してメッセージ作成</button>
+
+      <div style="margin-top: 12px;">
+        <textarea id="sosResult" placeholder="ここに現在地リンク付きのメッセージが作成されます" style="background:#1F0D0D; border-color:var(--sos-border);"></textarea>
+        <button class="btn btn-secondary" style="border-color:var(--sos-border); color:#FFD1D1;" onclick="shareSosMessage()">📲 LINE・メールで緊急送信・共有する</button>
+      </div>
+    </div>
+
     <!-- 1. 鍵保管庫 -->
     <div class="card">
       <h2>🔐 暗号鍵の保存庫（5つのキー）</h2>
-
       <div class="auto-gen-box">
         <h3>⚡ 月替わり・高度ランダム鍵一括生成</h3>
         <div class="key-input-group">
@@ -219,6 +281,7 @@
   <script>
     let currentEncryptSlot = 1;
     let currentDecryptSlot = 1;
+    let selectedSosText = "助けて！";
 
     let keys = JSON.parse(localStorage.getItem('saved_keys')) || { 1: '', 2: '', 3: '', 4: '', 5: '' };
 
@@ -230,6 +293,63 @@
       document.getElementById('keyInput').value = keys[currentEncryptSlot] || '';
     });
 
+    // 🚨 SOS定型文選択
+    function selectSosPhrase(btn, phrase) {
+      document.querySelectorAll('.sos-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedSosText = phrase;
+    }
+
+    // 📍 GPS現在地取得 ＆ SOS文作成
+    function sendSosAlert() {
+      const resultArea = document.getElementById('sosResult');
+      resultArea.value = "📍 現在地を取得中...";
+
+      if (!navigator.geolocation) {
+        alert("お使いのブラウザは位置情報（GPS）に対応していません。");
+        resultArea.value = `【SOS】${selectedSosText}\n（※位置情報の取得に失敗しました）`;
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          const mapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
+          
+          const fullMessage = `【緊急SOS】${selectedSosText}\n\n📍現在地（Google Map）:\n${mapsUrl}`;
+          resultArea.value = fullMessage;
+        },
+        (error) => {
+          alert("位置情報の取得を許可してください。");
+          resultArea.value = `【SOS】${selectedSosText}\n（※位置情報の取得が拒否または失敗しました）`;
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    // 📲 Web Share API による一発シェア
+    async function shareSosMessage() {
+      const msg = document.getElementById('sosResult').value;
+      if (!msg) return alert("先に「現在地を取得してメッセージ作成」ボタンを押してください。");
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: '【緊急SOS】',
+            text: msg
+          });
+        } catch (err) {
+          // シェアキャンセル時など
+        }
+      } else {
+        // Share API非対応（PC等）の場合はコピー
+        navigator.clipboard.writeText(msg);
+        alert("メッセージをクリップボードにコピーしました！LINEやメールに貼り付けて送信してください。");
+      }
+    }
+
+    // 🔑 暗号化関連の処理
     function selectEncryptSlot(slot) {
       currentEncryptSlot = slot;
       document.querySelectorAll('.encrypt-slot').forEach((btn, idx) => {
@@ -253,7 +373,6 @@
       alert(`鍵 ${currentEncryptSlot} を保存しました！`);
     }
 
-    // SHA-256ハッシュ関数（高速・強力なランダム生成用）
     async function sha256(message) {
       const msgBuffer = new TextEncoder().encode(message);
       const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -267,7 +386,6 @@
 
       for (let i = 1; i <= 5; i++) {
         const hash = await sha256(`SALT_KEY_${rawInput}_SLOT_${i}`);
-        // ハッシュから見た目もバラバラな英数記号鍵を作成
         keys[i] = hash.substring(0, 12 + i * 2); 
       }
 
@@ -276,7 +394,6 @@
       alert(`「${rawInput}」から高度な暗号鍵1〜5を一括生成しました！`);
     }
 
-    // 🔑 暗号用鍵オブジェクト（CryptoKey）に変換する関数
     async function getCryptoKey(secretStr) {
       const enc = new TextEncoder();
       const keyMaterial = await crypto.subtle.importKey(
@@ -296,7 +413,6 @@
       );
     }
 
-    // ✉️ AES-GCM 高度暗号化処理
     async function encryptMessage() {
       const text = document.getElementById('plainText').value;
       const keyStr = keys[currentEncryptSlot];
@@ -305,7 +421,7 @@
 
       try {
         const cryptoKey = await getCryptoKey(keyStr);
-        const iv = crypto.getRandomValues(new Uint8Array(12)); // 毎回使い捨てるランダムIV
+        const iv = crypto.getRandomValues(new Uint8Array(12));
         const encodedText = new TextEncoder().encode(text);
 
         const encryptedContent = await crypto.subtle.encrypt(
@@ -314,7 +430,6 @@
           encodedText
         );
 
-        // IV と 暗号文 を結合してBase64化
         const combined = new Uint8Array(iv.length + encryptedContent.byteLength);
         combined.set(iv, 0);
         combined.set(new Uint8Array(encryptedContent), iv.length);
@@ -326,7 +441,6 @@
       }
     }
 
-    // 🔓 AES-GCM 高度解読処理（手動照合）
     async function decryptMessage() {
       const input = document.getElementById('cipherInput').value.trim();
       const keyStr = keys[currentDecryptSlot];
