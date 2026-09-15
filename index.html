@@ -12,25 +12,25 @@
 
   <!-- 📱 PWA設定 -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#266B64">
+  <meta name="theme-color" content="#184E48">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="符号X">
 
   <style>
-    /* 🎨 カラーパレット（①サイバー・ティール ＆ エナジー） */
+    /* 🎨 カラーパレット（①サイバー・ティール ＆ ネオンエナジー） */
     :root {
-      --bg-color: #266B64;
-      --card-bg: #1B4B46;
-      --card-border: #3F8C84;
+      --bg-color: #184E48;
+      --card-bg: #113834;
+      --card-border: #2D736B;
       --accent-color: #FF6B00;
       --accent-hover: #E05E00;
       --text-color: #E0F2F1;
       --text-muted: #A0C4C1;
-      --input-bg: #123330;
+      --input-bg: #0B2623;
       
-      /* SOS専用カラー */
-      --sos-card-bg: #2D1414;
+      /* SOS専用カラー（高視認性） */
+      --sos-card-bg: #221010;
       --sos-border: #822828;
       --sos-red: #EF4444;
       --sos-red-hover: #DC2626;
@@ -65,8 +65,8 @@
       width: 100%; 
       border-radius: 12px; 
       overflow: hidden; 
-      border: 1px solid var(--card-border); 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border: 2px solid var(--accent-color); 
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
     }
     .banner-container img { width: 100%; height: auto; display: block; }
 
@@ -75,26 +75,27 @@
       border: 1px solid var(--card-border); 
       border-radius: 12px; 
       padding: 14px; 
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
 
     .card.sos-card {
       background-color: var(--sos-card-bg);
       border: 1px solid var(--sos-border);
-      padding: 12px;
+      padding: 14px;
     }
 
-    h2 { font-size: 0.95rem; margin-bottom: 8px; color: var(--accent-color); }
+    h2 { font-size: 1rem; margin-bottom: 10px; color: var(--accent-color); display: flex; align-items: center; gap: 6px; }
     .sos-card h2 { color: var(--sos-red); }
 
     .key-slots, .sos-phrase-grid { 
       display: grid; 
       grid-template-columns: repeat(2, 1fr); 
-      gap: 6px; 
-      margin-bottom: 8px; 
+      gap: 8px; 
+      margin-bottom: 10px; 
     }
     .key-slots { grid-template-columns: repeat(5, 1fr); gap: 6px; }
 
+    /* 🔑 鍵ボタンのスタイル */
     .slot-btn { 
       background-color: var(--input-bg); 
       border: 1px solid var(--card-border); 
@@ -107,33 +108,39 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: all 0.2s ease;
     }
     .slot-btn.active { 
       background-color: var(--accent-color); 
       color: #fff; 
       font-weight: bold; 
       border-color: var(--accent-color);
+      box-shadow: 0 0 8px rgba(255, 107, 0, 0.4);
     }
 
+    /* 🚨 SOSタブボタン（選択状態を非常にわかりやすく強化！） */
     .sos-btn {
-      background-color: #3F1B1B;
-      border: 1px solid var(--sos-border);
-      color: #FFD1D1;
-      padding: 6px 4px;
-      border-radius: 6px;
-      font-size: 0.78rem;
+      background-color: #120808;
+      border: 1.5px solid var(--sos-border);
+      color: #FFAAAA;
+      padding: 8px 4px;
+      border-radius: 8px;
+      font-size: 0.8rem;
       cursor: pointer;
-      min-height: 36px;
+      min-height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
       font-weight: bold;
+      transition: all 0.2s ease;
     }
     .sos-btn.active {
       background-color: var(--sos-red);
-      color: #fff;
+      color: #ffffff;
       border-color: var(--sos-red);
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+      transform: scale(1.02);
     }
 
     input, textarea { 
@@ -148,14 +155,14 @@
     }
     textarea { width: 100%; resize: vertical; min-height: 70px; line-height: 1.3; }
 
-    /* 🔑 鍵一括入力エリア（単位・助詞を排除） */
+    /* 🔑 鍵一括入力エリア */
     .key-input-group { 
       display: flex; 
       align-items: center;
       gap: 6px; 
     }
     .base-pass-static {
-      background-color: #0E2926;
+      background-color: var(--input-bg);
       border: 1px solid var(--card-border);
       color: var(--accent-color);
       padding: 10px 8px;
@@ -172,6 +179,7 @@
       letter-spacing: 2px;
     }
 
+    /* 🔘 ボタンデザイン全般 */
     .btn { 
       background-color: var(--accent-color); 
       color: #fff; 
@@ -187,9 +195,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background-color 0.2s;
+      transition: background-color 0.2s, transform 0.1s;
     }
-    .btn:active { background-color: var(--accent-hover); }
+    .btn:active { background-color: var(--accent-hover); transform: scale(0.98); }
     
     .btn-sos-main {
       background-color: var(--sos-red);
@@ -202,6 +210,10 @@
       background-color: transparent; 
       border: 1px solid var(--card-border); 
       color: var(--text-muted); 
+    }
+    .btn-share {
+      background-color: #10B981;
+      color: #ffffff;
     }
   </style>
 </head>
@@ -216,21 +228,21 @@
     <div class="card sos-card">
       <h2>🚨 緊急SOS・安否確認（位置情報送信）</h2>
       <div class="sos-phrase-grid">
-        <button class="sos-btn active" onclick="selectSosPhrase(this, '無事です！')">🍀 無事です！</button>
-        <button class="sos-btn" onclick="selectSosPhrase(this, '充電がありません。')">🔋 充電がありません</button>
-        <button class="sos-btn" onclick="selectSosPhrase(this, '緊急事態です。警察に連絡してください！')">👮 警察に連絡して</button>
+        <button class="sos-btn active" onclick="selectSosPhrase(this, '無事です！')">🟢 無事です！</button>
+        <button class="sos-btn" onclick="selectSosPhrase(this, '充電がありません。')">🪫 充電がない</button>
+        <button class="sos-btn" onclick="selectSosPhrase(this, '緊急事態です。警察に連絡してください！')">👮 警察を呼んで</button>
         <button class="sos-btn" onclick="selectSosPhrase(this, '体調が急変しました。救急車を呼んでください！')">🚑 救急車を呼んで</button>
       </div>
 
       <button class="btn btn-sos-main" onclick="sendSosAlert()">📍 現在地を取得して作成</button>
 
-      <div style="margin-top: 6px;">
-        <textarea id="sosResult" placeholder="作成されたメッセージが表示されます" style="background:#1F0D0D; border-color:var(--sos-border); min-height:55px; font-size:0.8rem;"></textarea>
-        <button class="btn btn-secondary" style="border-color:var(--sos-border); color:#FFD1D1; margin-top:4px;" onclick="shareSosMessage()">📲 LINE・メールで共有</button>
+      <div style="margin-top: 8px;">
+        <textarea id="sosResult" placeholder="作成されたメッセージが表示されます" style="background:#120808; border-color:var(--sos-border); min-height:60px; font-size:0.85rem;"></textarea>
+        <button class="btn btn-share" style="margin-top:6px;" onclick="shareSosMessage()">📲 LINE・メールで共有する</button>
       </div>
     </div>
 
-    <!-- 1. 鍵保管庫（推測されやすい表記を徹底排除） -->
+    <!-- 1. 鍵保管庫 -->
     <div class="card">
       <h2>🔐 暗号鍵の一括更新</h2>
       <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:6px;">ベースコード末尾に指定の2桁を入力して一括保存してください：</p>
@@ -252,7 +264,6 @@
     </div>
 
     <!-- 2. 暗号化エリア -->
-    <!-- 2. 暗号化エリア -->
     <div class="card">
       <h2>✉️ メッセージを暗号化する（AES-GCM）</h2>
       <textarea id="plainText" placeholder="送りたいメッセージを入力..."></textarea>
@@ -260,11 +271,10 @@
       
       <div style="margin-top: 8px;">
         <textarea id="cipherResult" readonly placeholder="作成された暗号文が表示されます"></textarea>
-        <!-- シェア機能が使えない環境では自動でコピーに切り替わるスマート共有ボタン -->
-        <button class="btn" style="background-color: #10B981;" onclick="shareCipherResult()">📲 LINE・メールで送信する</button>
+        <!-- 📱 スマホの共共有メニュー（LINE・メール一覧）を呼出すボタン -->
+        <button class="btn btn-share" onclick="shareCipherResult()">📲 LINE・メールで送信する</button>
       </div>
     </div>
-    
 
     <!-- 3. 解読エリア -->
     <div class="card">
@@ -334,6 +344,7 @@
       );
     }
 
+    // 📱 SOSメッセージのアプリ共有
     async function shareSosMessage() {
       const msg = document.getElementById('sosResult').value;
       if (!msg) return alert("先に「現在地を取得して作成」ボタンを押してください。");
@@ -377,12 +388,10 @@
       return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    // ⚡ 手動入力された「2桁のコード」を使って一括自動生成＆保存
     async function generateKeys() {
       const codeVal = document.getElementById('extraCodeInput').value.trim();
       if (!codeVal) return alert('末尾のコード（2桁）を入力してください');
 
-      // 1桁入力の場合も自動的に2桁（例: 9 -> 09）にする安全補正
       const codeStr = String(codeVal).padStart(2, '0');
       const combinedPass = `5561031${codeStr}`;
 
@@ -471,13 +480,17 @@
       }
     }
 
+    // 📱 暗号文のアプリ共有（LINE・メール一覧呼出）
     async function shareCipherResult() {
       const cipherText = document.getElementById('cipherResult').value;
       if (!cipherText) return alert('先に暗号文を生成してください。');
 
       if (navigator.share) {
         try {
-          await navigator.share({ title: '【符号X】暗号メッセージ', text: cipherText });
+          await navigator.share({
+            title: '【符号X】暗号メッセージ',
+            text: cipherText
+          });
         } catch (err) {
           console.log('共有がキャンセルされました:', err);
         }
@@ -486,7 +499,7 @@
           await navigator.clipboard.writeText(cipherText);
           alert('📲 暗号文をクリップボードにコピーしました！\nLINEやメールに貼り付けて送信してください。');
         } catch (err) {
-          alert("コピーに失敗しました。手動でテキストを選択してコピーしてください。");
+          alert('コピーに失敗しました。手動でテキストを選択してコピーしてください。');
         }
       }
     }
