@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>符号X - 高度暗号 & 偏愛Tool</title>
+  <title>符号X - 高度暗号 & 緊急SOS Tool</title>
 
   <!-- 🖼️ ファビコン ＆ SNS共有用アイコン -->
   <link rel="icon" href="angouicon.png" type="image/png">
@@ -27,6 +27,8 @@
       --accent-hover: #3CD09D;
       --btn-text-color: #0D1117;
       --border-color: #30363D;
+      --sos-color: #FF5555;
+      --sos-hover: #E04444;
     }
 
     * {
@@ -74,9 +76,39 @@
       color: var(--accent-color);
     }
 
+    .card-sos h2 {
+      color: var(--sos-color);
+    }
+
+    /* 🔘 4つのタブボタン配置スタイル */
+    .tab-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tab-btn {
+      padding: 10px 6px;
+      background-color: #0D1117;
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      border-color: var(--sos-color);
+      background-color: rgba(255, 85, 85, 0.15);
+      color: #FFFFFF;
+      font-weight: bold;
+    }
+
     textarea {
       width: 100%;
-      height: 100px;
+      height: 90px;
       background-color: #0D1117;
       border: 1px solid var(--border-color);
       color: var(--text-color);
@@ -109,6 +141,22 @@
       color: #ffffff;
       margin-top: 8px;
     }
+
+    .btn-sos {
+      background-color: var(--sos-color);
+      color: #ffffff;
+    }
+
+    .btn-sos:hover {
+      background-color: var(--sos-hover);
+    }
+
+    .status-text {
+      font-size: 0.85rem;
+      color: #8B949E;
+      margin-top: 8px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -117,7 +165,7 @@
     <!-- 🖼️ メインバナー画像 -->
     <img src="fugoux.webp" alt="符号X - 偏愛Tool" class="main-banner">
 
-    <!-- ✉️ 暗号化エリア -->
+    <!-- ✉️ 1. 暗号化エリア -->
     <div class="card">
       <h2>✉️ メッセージを暗号化する（AES-GCM）</h2>
       <textarea id="plainText" placeholder="送りたいメッセージを入力..."></textarea>
@@ -128,17 +176,37 @@
         <button class="btn btn-share" onclick="shareCipherResult()">📲 LINE・メールで送信する</button>
       </div>
     </div>
+
+    <!-- 🚨 2. 緊急位置情報送信エリア（4タブ選択式） -->
+    <div class="card card-sos">
+      <h2>🚨 緊急位置情報メッセージ</h2>
+      
+      <!-- タブ切り替えボタン -->
+      <div class="tab-grid">
+        <button class="tab-btn active" onclick="selectSosTab(this, '無事です')">🟢 無事です</button>
+        <button class="tab-btn" onclick="selectSosTab(this, '充電がありません')">🪫 充電がない</button>
+        <button class="tab-btn" onclick="selectSosTab(this, '警察を呼んでください')">👮 警察を呼んで</button>
+        <button class="tab-btn" onclick="selectSosTab(this, '救急車を呼んでください')">🚑 救急車を呼んで</button>
+      </div>
+
+      <button class="btn btn-sos" onclick="getEmergencyLocation()">📍 現在地を取得してメッセージ作成</button>
+      
+      <div style="margin-top: 12px;">
+        <textarea id="sosResult" readonly placeholder="選択したメッセージとGoogle Mapsリンクが表示されます"></textarea>
+        <button class="btn btn-share" onclick="shareSosResult()">📲 LINE・メールで送信する</button>
+      </div>
+      <p id="sosStatus" class="status-text"></p>
+    </div>
   </div>
 
   <script>
-    // 仮の暗号化処理（お手持ちのJSロジックに置き換え可能です）
+    // --- 暗号化処理 ---
     function encryptMessage() {
       const input = document.getElementById('plainText').value;
       if (!input) return alert('メッセージを入力してください。');
       document.getElementById('cipherResult').value = '[符号X:' + btoa(encodeURIComponent(input)) + ']';
     }
 
-    // 共有機能（非対応環境では自動でクリップボードにコピー）
     async function shareCipherResult() {
       const cipherText = document.getElementById('cipherResult').value;
       if (!cipherText) return alert('先に暗号文を生成してください。');
@@ -155,6 +223,73 @@
           alert('📲 暗号文をクリップボードにコピーしました！\nLINEやメールに貼り付けて送信してください。');
         } catch (err) {
           alert('コピーに失敗しました。手動でテキストを選択してコピーしてください。');
+        }
+      }
+    }
+
+    // --- 🚨 SOSメッセージ・タブ選択処理 ---
+    let selectedSosText = "無事です"; // 初期値
+
+    function selectSosTab(element, text) {
+      // 全タブのactiveクラスを解除
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      // クリックされたタブをアクティブ化
+      element.classList.add('active');
+      selectedSosText = text;
+
+      // 既に位置情報が取得されている場合はメッセージ文面を即時更新
+      if (window.currentLocationMapUrl) {
+        updateSosText(window.currentLocationMapUrl);
+      }
+    }
+
+    function updateSosText(mapUrl) {
+      const sosResult = document.getElementById('sosResult');
+      sosResult.value = `【緊急連絡】${selectedSosText}\n\n📍 現在地はこちら:\n${mapUrl}`;
+    }
+
+    function getEmergencyLocation() {
+      const status = document.getElementById('sosStatus');
+
+      if (!navigator.geolocation) {
+        status.textContent = 'お使いのブラウザは位置情報に対応していません。';
+        return;
+      }
+
+      status.textContent = '📍 位置情報を取得中...';
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          window.currentLocationMapUrl = `https://maps.google.com/?q=${lat},${lon}`;
+          
+          updateSosText(window.currentLocationMapUrl);
+          status.textContent = '✅ 位置情報の取得に成功しました！';
+        },
+        (error) => {
+          status.textContent = '❌ 位置情報の取得に失敗しました。設定を確認してください。';
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    async function shareSosResult() {
+      const sosText = document.getElementById('sosResult').value;
+      if (!sosText) return alert('先に「現在地を取得してメッセージ作成」を押してください。');
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: '【緊急連絡】位置情報通知', text: sosText });
+        } catch (err) {
+          console.log('共有がキャンセルされました:', err);
+        }
+      } else {
+        try {
+          await navigator.clipboard.writeText(sosText);
+          alert('📲 SOSメッセージをコピーしました！\nLINEやメールに貼り付けて送信してください。');
+        } catch (err) {
+          alert('コピーに失敗しました。');
         }
       }
     }
