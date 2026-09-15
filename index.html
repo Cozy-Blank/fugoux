@@ -17,25 +17,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="符号X">
 
- <style>
-    /* 🎨 カラーパレット（①マトリックス・サイバーグリーン） */
-    :root {
-      --bg-color: #0A120A;
-      --card-bg: #112214;
-      --card-border: #1E3D24;
-      --accent-color: #00FF66;
-      --accent-hover: #00CC52;
-      --text-color: #E6FFE8;
-      --text-muted: #80B388;
-      --input-bg: #061208;
-      
-      /* 🚨 SOS専用カラー（地味にならない鮮烈なレッド） */
-      --sos-card-bg: #2D0A0A;
-      --sos-border: #801A1A;
-      --sos-red: #FF3344;
-      --sos-red-hover: #CC1F2E;
-    }
-
+ 
     * { 
       box-sizing: border-box; 
       margin: 0; 
@@ -48,7 +30,24 @@
       background-color: var(--bg-color); 
       color: var(--text-color); 
       display: flex; 
-      justify-content: center; 
+      justify-content: center; <style>
+    /* 🎨 カラーパレット（①サイバー・ミント＆ゴールド：目に優しく高視認性） */
+    :root {
+      --bg-color: #0F1715;
+      --card-bg: #162420;
+      --card-border: #2A4740;
+      --accent-color: #2DD4BF;
+      --accent-hover: #14B8A6;
+      --text-color: #F0FDF4; /* 明るく読みやすい白緑 */
+      --text-muted: #99F6E4;  /* 視認性の高いくすみミント */
+      --input-bg: #0A100E;
+      
+      /* 🚨 SOS専用カラー（視認性を確保しつつ眩しくない赤） */
+      --sos-card-bg: #2D1214;
+      --sos-border: #7F232B;
+      --sos-red: #F87171;
+      --sos-red-hover: #EF4444;
+    }
       padding: 12px 10px 40px; 
       min-height: 100vh; 
     }
