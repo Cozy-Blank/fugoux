@@ -252,6 +252,7 @@
     </div>
 
     <!-- 2. 暗号化エリア -->
+    <!-- 2. 暗号化エリア -->
     <div class="card">
       <h2>✉️ メッセージを暗号化する（AES-GCM）</h2>
       <textarea id="plainText" placeholder="送りたいメッセージを入力..."></textarea>
@@ -259,9 +260,11 @@
       
       <div style="margin-top: 8px;">
         <textarea id="cipherResult" readonly placeholder="作成された暗号文が表示されます"></textarea>
-        <button class="btn btn-secondary" onclick="shareCipherResult()">📲 LINE・メールで送信・コピーする</button>
+        <!-- シェア機能が使えない環境では自動でコピーに切り替わるスマート共有ボタン -->
+        <button class="btn" style="background-color: #10B981;" onclick="shareCipherResult()">📲 LINE・メールで送信する</button>
       </div>
     </div>
+    
 
     <!-- 3. 解読エリア -->
     <div class="card">
