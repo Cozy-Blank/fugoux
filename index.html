@@ -12,12 +12,30 @@
 
   <!-- 📱 PWA設定 -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#184E48">
+  <meta name="theme-color" content="#0F1715">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="符号X">
 
- 
+  <style>
+    /* 🎨 カラーパレット（サイバー・ミント＆ゴールド：目に優しく高視認性） */
+    :root {
+      --bg-color: #0F1715;        /* 目に優しい深みのあるダークスレート */
+      --card-bg: #162420;      /* カード背景 */
+      --card-border: #2A4740;  /* 落ち着いた枠線 */
+      --accent-color: #2DD4BF; /* 眩しくないミントグリーン */
+      --accent-hover: #14B8A6;
+      --text-color: #F0FDF4;   /* はっきり読めるオフホワイト */
+      --text-muted: #99F6E4;    /* 視認性の高いくすみミント */
+      --input-bg: #0A100E;     /* 入力欄背景 */
+      
+      /* 🚨 SOS専用カラー（警戒感を保ちつつ刺激を抑えた赤） */
+      --sos-card-bg: #2D1214;
+      --sos-border: #7F232B;
+      --sos-red: #F87171;
+      --sos-red-hover: #EF4444;
+    }
+
     * { 
       box-sizing: border-box; 
       margin: 0; 
@@ -30,24 +48,7 @@
       background-color: var(--bg-color); 
       color: var(--text-color); 
       display: flex; 
-      justify-content: center; <style>
-    /* 🎨 カラーパレット（①サイバー・ミント＆ゴールド：目に優しく高視認性） */
-    :root {
-      --bg-color: #0F1715;
-      --card-bg: #162420;
-      --card-border: #2A4740;
-      --accent-color: #2DD4BF;
-      --accent-hover: #14B8A6;
-      --text-color: #F0FDF4; /* 明るく読みやすい白緑 */
-      --text-muted: #99F6E4;  /* 視認性の高いくすみミント */
-      --input-bg: #0A100E;
-      
-      /* 🚨 SOS専用カラー（視認性を確保しつつ眩しくない赤） */
-      --sos-card-bg: #2D1214;
-      --sos-border: #7F232B;
-      --sos-red: #F87171;
-      --sos-red-hover: #EF4444;
-    }
+      justify-content: center; 
       padding: 12px 10px 40px; 
       min-height: 100vh; 
     }
@@ -65,7 +66,7 @@
       border-radius: 12px; 
       overflow: hidden; 
       border: 2px solid var(--accent-color); 
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
     }
     .banner-container img { width: 100%; height: auto; display: block; }
 
@@ -74,7 +75,7 @@
       border: 1px solid var(--card-border); 
       border-radius: 12px; 
       padding: 14px; 
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
     .card.sos-card {
@@ -111,17 +112,17 @@
     }
     .slot-btn.active { 
       background-color: var(--accent-color); 
-      color: #fff; 
+      color: #0A100E; /* 選択時は濃い色の文字にして視認性UP */
       font-weight: bold; 
       border-color: var(--accent-color);
-      box-shadow: 0 0 8px rgba(255, 107, 0, 0.4);
+      box-shadow: 0 0 8px rgba(45, 212, 191, 0.4);
     }
 
-    /* 🚨 SOSタブボタン（選択状態を非常にわかりやすく強化！） */
+    /* 🚨 SOSタブボタン */
     .sos-btn {
-      background-color: #120808;
+      background-color: #1A0A0B;
       border: 1.5px solid var(--sos-border);
-      color: #FFAAAA;
+      color: #FFCDCD;
       padding: 8px 4px;
       border-radius: 8px;
       font-size: 0.8rem;
@@ -136,9 +137,9 @@
     }
     .sos-btn.active {
       background-color: var(--sos-red);
-      color: #ffffff;
+      color: #0A100E; /* 選択時は黒文字にして視認性確保 */
       border-color: var(--sos-red);
-      box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+      box-shadow: 0 0 10px rgba(248, 113, 113, 0.5);
       transform: scale(1.02);
     }
 
@@ -181,7 +182,7 @@
     /* 🔘 ボタンデザイン全般 */
     .btn { 
       background-color: var(--accent-color); 
-      color: #fff; 
+      color: #0A100E; /* 濃い文字でくっきり視認 */
       border: none; 
       padding: 10px 12px; 
       border-radius: 6px; 
@@ -200,6 +201,7 @@
     
     .btn-sos-main {
       background-color: var(--sos-red);
+      color: #0A100E;
       font-size: 0.88rem;
       margin-top: 4px;
     }
@@ -270,7 +272,6 @@
       
       <div style="margin-top: 8px;">
         <textarea id="cipherResult" readonly placeholder="作成された暗号文が表示されます"></textarea>
-        <!-- 📱 スマホの共共有メニュー（LINE・メール一覧）を呼出すボタン -->
         <button class="btn btn-share" onclick="shareCipherResult()">📲 LINE・メールで送信する</button>
       </div>
     </div>
@@ -343,7 +344,6 @@
       );
     }
 
-    // 📱 SOSメッセージのアプリ共有
     async function shareSosMessage() {
       const msg = document.getElementById('sosResult').value;
       if (!msg) return alert("先に「現在地を取得して作成」ボタンを押してください。");
@@ -479,7 +479,6 @@
       }
     }
 
-    // 📱 暗号文のアプリ共有（LINE・メール一覧呼出）
     async function shareCipherResult() {
       const cipherText = document.getElementById('cipherResult').value;
       if (!cipherText) return alert('先に暗号文を生成してください。');
