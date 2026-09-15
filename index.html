@@ -1,11 +1,163 @@
-/* 〜〜 既存のCSSコードが上にある 〜〜 */
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>符号X - 高度暗号 & 偏愛Tool</title>
 
-/* 🖼️ バナー画像をキレイにフィットさせるCSS */
-.main-banner {
-  width: 100%;
-  max-width: 800px;
-  height: auto;
-  border-radius: 12px;
-  display: block;
-  margin: 0 auto 20px auto;
-}
+  <!-- 🖼️ ファビコン ＆ SNS共有用アイコン -->
+  <link rel="icon" href="angouicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="angouicon.png">
+  <meta property="og:image" content="https://君のVercelアドレス.vercel.app/angouicon.png">
+
+  <!-- 📱 PWA設定 -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0D1117">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="符号X">
+
+  <style>
+    /* 🎨 カラーパレット（ミント・モダン・サイバー） */
+    :root {
+      --bg-color: #0D1117;
+      --card-bg: #161B22;
+      --text-color: #E6EDF3;
+      --accent-color: #51E5B2;
+      --accent-hover: #3CD09D;
+      --btn-text-color: #0D1117;
+      --border-color: #30363D;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 20px 12px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+    }
+
+    /* 🖼️ バナー画像デザイン */
+    .main-banner {
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      display: block;
+      margin: 0 auto 20px auto;
+      border: 1px solid var(--accent-color);
+      box-shadow: 0 0 15px rgba(81, 229, 178, 0.2);
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+      color: var(--accent-color);
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      background-color: #0D1117;
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 0.95rem;
+      resize: vertical;
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background-color: var(--accent-color);
+      color: var(--btn-text-color);
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .btn-share {
+      background-color: #10B981;
+      color: #ffffff;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- 🖼️ メインバナー画像 -->
+    <img src="fugoux.webp" alt="符号X - 偏愛Tool" class="main-banner">
+
+    <!-- ✉️ 暗号化エリア -->
+    <div class="card">
+      <h2>✉️ メッセージを暗号化する（AES-GCM）</h2>
+      <textarea id="plainText" placeholder="送りたいメッセージを入力..."></textarea>
+      <button class="btn" onclick="encryptMessage()">「鍵 <span id="selectedEncryptLabel">1</span>」で暗号化する</button>
+      
+      <div style="margin-top: 12px;">
+        <textarea id="cipherResult" readonly placeholder="作成された暗号文が表示されます"></textarea>
+        <button class="btn btn-share" onclick="shareCipherResult()">📲 LINE・メールで送信する</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 仮の暗号化処理（お手持ちのJSロジックに置き換え可能です）
+    function encryptMessage() {
+      const input = document.getElementById('plainText').value;
+      if (!input) return alert('メッセージを入力してください。');
+      document.getElementById('cipherResult').value = '[符号X:' + btoa(encodeURIComponent(input)) + ']';
+    }
+
+    // 共有機能（非対応環境では自動でクリップボードにコピー）
+    async function shareCipherResult() {
+      const cipherText = document.getElementById('cipherResult').value;
+      if (!cipherText) return alert('先に暗号文を生成してください。');
+
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: '【符号X】暗号メッセージ', text: cipherText });
+        } catch (err) {
+          console.log('共有がキャンセルされました:', err);
+        }
+      } else {
+        try {
+          await navigator.clipboard.writeText(cipherText);
+          alert('📲 暗号文をクリップボードにコピーしました！\nLINEやメールに貼り付けて送信してください。');
+        } catch (err) {
+          alert('コピーに失敗しました。手動でテキストを選択してコピーしてください。');
+        }
+      }
+    }
+  </script>
+</body>
+</html>
