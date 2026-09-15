@@ -207,12 +207,21 @@
 </head>
 <body>
 
-  <div class="container">
-    <div class="banner-container">
-      <img src="符号.png" alt="符号X 偏愛Tool">
-    </div>
+ <!-- 🖼️ アプリのメインバナー -->
+<div class="banner-container">
+  <img src="fugoux.webp" alt="符号X - 偏愛Tool" class="main-banner">
+/* 〜〜 既存のCSSコードが上にある 〜〜 */
 
-    <!-- 🚨 緊急SOS・安否確認エリア -->
+/* 🖼️ バナー画像をキレイにフィットさせるCSS */
+.main-banner {
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  border-radius: 12px;
+  display: block;
+  margin: 0 auto 20px auto;
+}</div>
+<!-- 🚨 緊急SOS・安否確認エリア -->
     <div class="card sos-card">
       <h2>🚨 緊急SOS・安否確認（位置情報送信）</h2>
       <div class="sos-phrase-grid">
